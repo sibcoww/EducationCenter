@@ -1,4 +1,5 @@
-
+using EducationCenter.Api.Data;
+using Microsoft.EntityFrameworkCore;
 namespace EducationCenter.Api
 {
     public class Program
@@ -10,7 +11,10 @@ namespace EducationCenter.Api
             // Add services to the container.
 
             builder.Services.AddControllers();
-            // Learn more about configuring OpenAPI at https://aka.ms/aspnet/openapi
+
+            builder.Services.AddDbContext<AppDbContext>(options => options.UseNpgsql(
+                builder.Configuration.GetConnectionString("DefaultConnection")));
+
             builder.Services.AddOpenApi();
 
             var app = builder.Build();

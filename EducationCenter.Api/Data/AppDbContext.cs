@@ -10,5 +10,8 @@ namespace EducationCenter.Api.Data
         }
 
         public DbSet<Course> Courses { get; set; }
+        public DbSet<Teacher> Teachers { get; set; }
+        public DbSet<Student> Students { get; set; }
+        public DbSet<Group> Groups { get; set; }
     }
 }
