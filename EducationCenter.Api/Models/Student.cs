@@ -5,9 +5,7 @@
         public int Id { get; set; }
         public string Name { get; set; } = string.Empty;
         public DateOnly BirthDate { get; set; }
-
-        public List<Course> Courses { get; set; }
-
-        public Group Group { get; set; }
+        public int? GroupId { get; set; }
+        public Group? Group { get; set; }
     }
 }
