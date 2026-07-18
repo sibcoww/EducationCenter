@@ -19,7 +19,7 @@ public class TeachersController : ControllerBase
     }
 
     [HttpPost]
-    public async Task<ActionResult<CreateTeacherDTo>> Create(CreateTeacherDTo dto)
+    public async Task<ActionResult<TeacherDTo>> Create(CreateTeacherDTo dto)
     {
         var teacher = new Teacher
         {
@@ -28,10 +28,12 @@ public class TeachersController : ControllerBase
         };
         _context.Teachers.Add(teacher);
         await _context.SaveChangesAsync();
-        var result = new CreateTeacherDTo
+        var result = new TeacherDTo
         {
             Name = teacher.Name,
-            BirthDate = teacher.BirthDate
+            BirthDate = teacher.BirthDate,
+            SubjectTitles = [],
+            GroupNames = []
         };
         return CreatedAtAction(nameof(GetById), new { id = teacher.Id }, result);
     }
@@ -47,14 +49,16 @@ public class TeachersController : ControllerBase
         {
             Id = teacher.Id,
             Name = teacher.Name,
-            BirthDate = teacher.BirthDate
+            BirthDate = teacher.BirthDate,
+            SubjectTitles = teacher.Subjects.Select(s => s.Title).ToList(),
+            GroupNames = teacher.Groups.Select(g => g.Name).ToList()
         };
         return Ok(result);
     }
     [HttpGet]
-    public async Task<ActionResult<TeacherDTo>> Get()
+    public async Task<ActionResult<List<TeacherDTo>>> Get()
     {
-        var teachers = await _context.Teachers.ToListAsync();
+        var teachers = await _context.Teachers.Include(t => t.Subjects).Include(t => t.Groups).ToListAsync();
         var result = teachers.Select(t => new TeacherDTo
         {
             Id = t.Id,
@@ -67,9 +71,9 @@ public class TeachersController : ControllerBase
         return Ok(result);
     }
     [HttpPut("{id}")]
-    public async Task<ActionResult<TeacherDTo>> Update(int id, CreateTeacherDTo dto)
+    public async Task<ActionResult<TeacherDTo>> Update(int id, UpdateTeacherDTo dto)
     {
-        var teacher = await _context.Teachers.FindAsync(id);
+        var teacher = await _context.Teachers.Include(t => t.Subjects).Include(t => t.Groups).FirstOrDefaultAsync(t => t.Id == id);
         if (teacher == null)
         {
             return NotFound();
@@ -81,7 +85,9 @@ public class TeachersController : ControllerBase
         {
             Id = teacher.Id,
             Name = teacher.Name,
-            BirthDate = teacher.BirthDate
+            BirthDate = teacher.BirthDate,
+            SubjectTitles = teacher.Subjects.Select(s => s.Title).ToList(),
+            GroupNames = teacher.Groups.Select(g => g.Name).ToList()
         };
         return Ok(result);
     }
@@ -97,5 +103,72 @@ public class TeachersController : ControllerBase
         await _context.SaveChangesAsync();
         return NoContent();
     }
-    
+    [HttpPost("{teacherId}/add-subject/{subjectId}")]
+    public async Task<ActionResult> AddSubject(int teacherId, int subjectId)
+    {
+        var teacher = await _context.Teachers.Include(t => t.Subjects).FirstOrDefaultAsync(t => t.Id == teacherId);
+        if (teacher == null)
+        {
+            return NotFound();
+        }
+        var subject = await _context.Subjects.FindAsync(subjectId);
+        if (subject == null)
+        {
+            return NotFound();
+        }
+        teacher.Subjects.Add(subject);
+        await _context.SaveChangesAsync();
+        return NoContent();
+    }
+    [HttpPost("{teacherId}/add-group/{groupId}")]
+    public async Task<ActionResult> AddGroup(int teacherId, int groupId)
+    {
+        var teacher = await _context.Teachers.Include(t => t.Groups).FirstOrDefaultAsync(t => t.Id == teacherId);
+        if (teacher == null)
+        {
+            return NotFound();
+        }
+        var group = await _context.Groups.FindAsync(groupId);
+        if (group == null)
+        {
+            return NotFound();
+        }
+        teacher.Groups.Add(group);
+        await _context.SaveChangesAsync();
+        return NoContent();
+    }
+    [HttpDelete("{teacherId}/remove-subject/{subjectId}")]
+    public async Task<ActionResult> RemoveSubject(int teacherId, int subjectId)
+    {
+        var teacher = await _context.Teachers.Include(t => t.Subjects).FirstOrDefaultAsync(t => t.Id == teacherId);
+        if (teacher == null)
+        {
+            return NotFound();
+        }
+        var subject = await _context.Subjects.FindAsync(subjectId);
+        if (subject == null)
+        {
+            return NotFound();
+        }
+        teacher.Subjects.Remove(subject);
+        await _context.SaveChangesAsync();
+        return NoContent();
+    }
+    [HttpDelete("{teacherId}/remove-group/{groupId}")]
+    public async Task<ActionResult> RemoveGroup(int teacherId, int groupId)
+    {
+        var teacher = await _context.Teachers.Include(t => t.Groups).FirstOrDefaultAsync(t => t.Id == teacherId);
+        if (teacher == null)
+        {
+            return NotFound();
+        }
+        var group = await _context.Groups.FindAsync(groupId);
+        if (group == null)
+        {
+            return NotFound();
+        }
+        teacher.Groups.Remove(group);
+        await _context.SaveChangesAsync();
+        return NoContent();
+    }
 }
