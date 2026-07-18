@@ -1,3 +1,4 @@
+using System.Text.Json.Serialization;
 using EducationCenter.Api.Data;
 using Microsoft.EntityFrameworkCore;
 namespace EducationCenter.Api
@@ -10,7 +11,19 @@ namespace EducationCenter.Api
 
             // Add services to the container.
 
-            builder.Services.AddControllers();
+
+            builder.Services.Configure<Microsoft.AspNetCore.Http.Json.JsonOptions>(options =>
+            {
+                options.SerializerOptions.NumberHandling =
+                    JsonNumberHandling.Strict;
+            });
+
+            builder.Services.AddControllers()
+                .AddJsonOptions(options =>
+                {
+                    options.JsonSerializerOptions.NumberHandling =
+                        JsonNumberHandling.Strict;
+                });
 
             builder.Services.AddDbContext<AppDbContext>(options => options.UseNpgsql(
                 builder.Configuration.GetConnectionString("DefaultConnection")));
@@ -18,13 +31,17 @@ namespace EducationCenter.Api
             builder.Services.AddOpenApi();
 
             var app = builder.Build();
-
-            // Configure the HTTP request pipeline.
             if (app.Environment.IsDevelopment())
             {
                 app.MapOpenApi();
-            }
 
+                app.UseSwaggerUI(options =>
+                {
+                    options.SwaggerEndpoint(
+                        "/openapi/v1.json",
+                        "Education Center API");
+                });
+            }
             app.UseHttpsRedirection();
 
             app.UseAuthorization();

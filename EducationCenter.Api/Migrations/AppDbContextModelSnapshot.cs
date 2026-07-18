@@ -134,7 +134,7 @@ namespace EducationCenter.Api.Migrations
 
                     b.HasKey("Id");
 
-                    b.ToTable("Subject");
+                    b.ToTable("Subjects");
                 });
 
             modelBuilder.Entity("EducationCenter.Api.Models.Teacher", b =>

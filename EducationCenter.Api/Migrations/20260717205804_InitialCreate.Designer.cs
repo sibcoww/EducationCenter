@@ -12,7 +12,7 @@ using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 namespace EducationCenter.Api.Migrations
 {
     [DbContext(typeof(AppDbContext))]
-    [Migration("20260717194902_InitialCreate")]
+    [Migration("20260717205804_InitialCreate")]
     partial class InitialCreate
     {
         /// <inheritdoc />
@@ -137,7 +137,7 @@ namespace EducationCenter.Api.Migrations
 
                     b.HasKey("Id");
 
-                    b.ToTable("Subject");
+                    b.ToTable("Subjects");
                 });
 
             modelBuilder.Entity("EducationCenter.Api.Models.Teacher", b =>

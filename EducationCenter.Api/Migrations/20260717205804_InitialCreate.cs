@@ -28,7 +28,7 @@ namespace EducationCenter.Api.Migrations
                 });
 
             migrationBuilder.CreateTable(
-                name: "Subject",
+                name: "Subjects",
                 columns: table => new
                 {
                     Id = table.Column<int>(type: "integer", nullable: false)
@@ -38,7 +38,7 @@ namespace EducationCenter.Api.Migrations
                 },
                 constraints: table =>
                 {
-                    table.PrimaryKey("PK_Subject", x => x.Id);
+                    table.PrimaryKey("PK_Subjects", x => x.Id);
                 });
 
             migrationBuilder.CreateTable(
@@ -72,9 +72,9 @@ namespace EducationCenter.Api.Migrations
                         principalColumn: "Id",
                         onDelete: ReferentialAction.Cascade);
                     table.ForeignKey(
-                        name: "FK_CourseSubject_Subject_SubjectsId",
+                        name: "FK_CourseSubject_Subjects_SubjectsId",
                         column: x => x.SubjectsId,
-                        principalTable: "Subject",
+                        principalTable: "Subjects",
                         principalColumn: "Id",
                         onDelete: ReferentialAction.Cascade);
                 });
@@ -100,9 +100,9 @@ namespace EducationCenter.Api.Migrations
                         principalColumn: "Id",
                         onDelete: ReferentialAction.Cascade);
                     table.ForeignKey(
-                        name: "FK_Groups_Subject_SubjectId",
+                        name: "FK_Groups_Subjects_SubjectId",
                         column: x => x.SubjectId,
-                        principalTable: "Subject",
+                        principalTable: "Subjects",
                         principalColumn: "Id");
                     table.ForeignKey(
                         name: "FK_Groups_Teachers_TeacherId",
@@ -122,9 +122,9 @@ namespace EducationCenter.Api.Migrations
                 {
                     table.PrimaryKey("PK_SubjectTeacher", x => new { x.SubjectsId, x.TeachersId });
                     table.ForeignKey(
-                        name: "FK_SubjectTeacher_Subject_SubjectsId",
+                        name: "FK_SubjectTeacher_Subjects_SubjectsId",
                         column: x => x.SubjectsId,
-                        principalTable: "Subject",
+                        principalTable: "Subjects",
                         principalColumn: "Id",
                         onDelete: ReferentialAction.Cascade);
                     table.ForeignKey(
@@ -205,7 +205,7 @@ namespace EducationCenter.Api.Migrations
                 name: "Courses");
 
             migrationBuilder.DropTable(
-                name: "Subject");
+                name: "Subjects");
 
             migrationBuilder.DropTable(
                 name: "Teachers");

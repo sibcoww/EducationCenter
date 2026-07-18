@@ -1,5 +1,6 @@
 ﻿namespace EducationCenter.Api.Models
 {
+    
     public class Subject
     {
         public int Id { get; set; }
