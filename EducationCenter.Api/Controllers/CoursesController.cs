@@ -110,50 +110,15 @@ public class CoursesController : ControllerBase
         var course = await _context.Courses.FindAsync(id);
         if (course == null) return NotFound();
 
+        if (await _context.Groups.AnyAsync(g => g.CourseId == id))
+        {
+            return Conflict($"Course with ID {id} is used by one or more groups.");
+        }
+
         _context.Courses.Remove(course);
         await _context.SaveChangesAsync();
 
         return NoContent();
     }
 
-    [HttpPost("{courseId}/subjects/{subjectId}")]
-    public async Task<IActionResult> AddSubjectToCourse(int courseId, int subjectId)
-    {
-        var course = await _context.Courses
-            .Include(c => c.Subjects)
-            .FirstOrDefaultAsync(c => c.Id == courseId);
-
-        if (course == null) return NotFound();
-
-        var subject = await _context.Subjects.FindAsync(subjectId);
-        if (subject == null) return NotFound();
-
-        if (course.Subjects.Any(s => s.Id == subjectId))
-        {
-            return Conflict();
-        }
-
-        course.Subjects.Add(subject);
-        await _context.SaveChangesAsync();
-
-        return NoContent();
-    }
-
-    [HttpDelete("{courseId}/subjects/{subjectId}")]
-    public async Task<IActionResult> RemoveSubjectFromCourse(int courseId, int subjectId)
-    {
-        var course = await _context.Courses
-            .Include(c => c.Subjects)
-            .FirstOrDefaultAsync(c => c.Id == courseId);
-
-        if (course == null) return NotFound();
-
-        var subject = course.Subjects.FirstOrDefault(s => s.Id == subjectId);
-        if (subject == null) return NotFound();
-
-        course.Subjects.Remove(subject);
-        await _context.SaveChangesAsync();
-
-        return NoContent();
-    }
 }

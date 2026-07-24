@@ -123,7 +123,7 @@ namespace EducationCenter.Tests.Controllers
             Assert.Equal(updateDto.Title, resultValue.Title);
             Assert.Equal(updateDto.Description, resultValue.Description);
 
-            var dbSubject = await dbContext.Subjects.FindAsync(subject.Id);
+            var dbSubject = await dbContext.Subjects.SingleAsync(s => s.Id == subject.Id);
             Assert.Equal(updateDto.Title, dbSubject.Title);
         }
 
@@ -145,6 +145,42 @@ namespace EducationCenter.Tests.Controllers
             Assert.IsType<NoContentResult>(actionResult);
             var dbSubject = await dbContext.Subjects.FindAsync(subject.Id);
             Assert.Null(dbSubject);
+        }
+
+        [Fact]
+        public async Task RemoveTeacherFromSubject_RemovesOnlyRelationship()
+        {
+            var dbContext = GetDatabaseContext();
+            var teacher = new Teacher { Name = "John" };
+            var subject = new Subject { Title = "Math", Teachers = [teacher] };
+            dbContext.Subjects.Add(subject);
+            await dbContext.SaveChangesAsync();
+
+            var result = await new SubjectsController(dbContext)
+                .RemoveTeacherFromSubject(subject.Id, teacher.Id);
+
+            Assert.IsType<NoContentResult>(result);
+            Assert.NotNull(await dbContext.Subjects.FindAsync(subject.Id));
+            Assert.NotNull(await dbContext.Teachers.FindAsync(teacher.Id));
+            var savedSubject = await dbContext.Subjects.Include(s => s.Teachers)
+                .SingleAsync(s => s.Id == subject.Id);
+            Assert.Empty(savedSubject.Teachers);
+        }
+
+        [Fact]
+        public async Task Delete_ReturnsConflict_WhenSubjectIsUsedByGroup()
+        {
+            var dbContext = GetDatabaseContext();
+            var subject = new Subject { Title = "Math" };
+            dbContext.Subjects.Add(subject);
+            await dbContext.SaveChangesAsync();
+            dbContext.Groups.Add(new Group { Name = "Group A", SubjectId = subject.Id });
+            await dbContext.SaveChangesAsync();
+
+            var result = await new SubjectsController(dbContext).Delete(subject.Id);
+
+            Assert.IsType<ConflictObjectResult>(result);
+            Assert.NotNull(await dbContext.Subjects.FindAsync(subject.Id));
         }
     }
 }

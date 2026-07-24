@@ -20,6 +20,19 @@ public class GroupsController : ControllerBase
     [HttpPost]
     public async Task<ActionResult<GroupDTo>> Create(CreateGroupDTo dto)
     {
+        if (!await _context.Courses.AnyAsync(c => c.Id == dto.CourseId))
+        {
+            return NotFound($"Course with ID {dto.CourseId} not found.");
+        }
+        if (dto.SubjectId.HasValue && !await _context.Subjects.AnyAsync(s => s.Id == dto.SubjectId.Value))
+        {
+            return NotFound($"Subject with ID {dto.SubjectId.Value} not found.");
+        }
+        if (dto.TeacherId.HasValue && !await _context.Teachers.AnyAsync(t => t.Id == dto.TeacherId.Value))
+        {
+            return NotFound($"Teacher with ID {dto.TeacherId.Value} not found.");
+        }
+
         var group = new Group
         {
             Name = dto.Name,
@@ -112,6 +125,19 @@ public class GroupsController : ControllerBase
         var group = await _context.Groups.FindAsync(id);
         if (group == null) return NotFound();
 
+        if (!await _context.Courses.AnyAsync(c => c.Id == dto.CourseId))
+        {
+            return NotFound($"Course with ID {dto.CourseId} not found.");
+        }
+        if (dto.SubjectId.HasValue && !await _context.Subjects.AnyAsync(s => s.Id == dto.SubjectId.Value))
+        {
+            return NotFound($"Subject with ID {dto.SubjectId.Value} not found.");
+        }
+        if (dto.TeacherId.HasValue && !await _context.Teachers.AnyAsync(t => t.Id == dto.TeacherId.Value))
+        {
+            return NotFound($"Teacher with ID {dto.TeacherId.Value} not found.");
+        }
+
         group.Name = dto.Name;
         group.CourseId = dto.CourseId;
         group.SubjectId = dto.SubjectId;
@@ -143,6 +169,11 @@ public class GroupsController : ControllerBase
     {
         var group = await _context.Groups.FindAsync(id);
         if (group == null) return NotFound();
+
+        if (await _context.Students.AnyAsync(s => s.GroupId == id))
+        {
+            return Conflict($"Group with ID {id} contains one or more students.");
+        }
 
         _context.Groups.Remove(group);
         await _context.SaveChangesAsync();

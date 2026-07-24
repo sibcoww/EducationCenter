@@ -96,12 +96,16 @@ public class SubjectsController : ControllerBase
         {
             return NotFound();
         }
+        if (await _context.Groups.AnyAsync(g => g.SubjectId == id))
+        {
+            return Conflict($"Subject with ID {id} is used by one or more groups.");
+        }
         _context.Subjects.Remove(subject);
         await _context.SaveChangesAsync();
         return NoContent();
     }
 
-    [HttpPost("{subjectId}/add-teacher/{teacherId}")]
+    [HttpPost("{subjectId}/teachers/{teacherId}")]
     public async Task<IActionResult> AddTeacherToSubject(int subjectId, int teacherId)
     {
         var subject = await _context.Subjects
@@ -118,22 +122,22 @@ public class SubjectsController : ControllerBase
         }
         if (subject.Teachers.Any(t => t.Id == teacherId))
         {
-            return BadRequest($"Teacher with ID {teacherId} is already assigned to the subject.");
+            return Conflict($"Teacher with ID {teacherId} is already assigned to the subject.");
         }
         subject.Teachers.Add(teacher);
         await _context.SaveChangesAsync();
         return NoContent();
     }
 
-    [HttpPost("{SubjectId}/add-course/{courseId}")]
-    public async Task<IActionResult> AddCourseToSubject(int SubjectId, int courseId)
+    [HttpPost("{subjectId}/courses/{courseId}")]
+    public async Task<IActionResult> AddCourseToSubject(int subjectId, int courseId)
     {
         var subject = await _context.Subjects
             .Include(s => s.Courses)
-            .FirstOrDefaultAsync(s => s.Id == SubjectId);
+            .FirstOrDefaultAsync(s => s.Id == subjectId);
         if (subject == null)
         {
-            return NotFound($"Subject with ID {SubjectId} not found.");
+            return NotFound($"Subject with ID {subjectId} not found.");
         }
         var course = await _context.Courses.FindAsync(courseId);
         if (course == null)
@@ -142,13 +146,13 @@ public class SubjectsController : ControllerBase
         }
         if (subject.Courses.Any(c => c.Id == courseId))
         {
-            return BadRequest($"Course with ID {courseId} is already assigned to the subject.");
+            return Conflict($"Course with ID {courseId} is already assigned to the subject.");
         }
         subject.Courses.Add(course);
         await _context.SaveChangesAsync();
         return NoContent();
     }
-    [HttpDelete("{subjectId}/remove-teacher/{teacherId}")]
+    [HttpDelete("{subjectId}/teachers/{teacherId}")]
     public async Task<IActionResult> RemoveTeacherFromSubject(int subjectId, int teacherId)
     {
         var subject = await _context.Subjects
@@ -163,15 +167,16 @@ public class SubjectsController : ControllerBase
         {
             return NotFound($"Teacher with ID {teacherId} not found.");
         }
-        if (!subject.Teachers.Any(t => t.Id == teacherId))
+        var assignedTeacher = subject.Teachers.FirstOrDefault(t => t.Id == teacherId);
+        if (assignedTeacher == null)
         {
-            return BadRequest($"Teacher with ID {teacherId} is not assigned to the subject.");
+            return NotFound($"Teacher with ID {teacherId} is not assigned to the subject.");
         }
-        subject.Teachers.Remove(teacher);
+        subject.Teachers.Remove(assignedTeacher);
         await _context.SaveChangesAsync();
         return NoContent();
     }
-    [HttpDelete("{subjectId}/remove-course/{courseId}")]
+    [HttpDelete("{subjectId}/courses/{courseId}")]
     public async Task<IActionResult> RemoveCourseFromSubject(int subjectId, int courseId)
     {
         var subject = await _context.Subjects
@@ -186,11 +191,12 @@ public class SubjectsController : ControllerBase
         {
             return NotFound($"Course with ID {courseId} not found.");
         }
-        if (!subject.Courses.Any(c => c.Id == courseId))
+        var assignedCourse = subject.Courses.FirstOrDefault(c => c.Id == courseId);
+        if (assignedCourse == null)
         {
-            return BadRequest($"Course with ID {courseId} is not assigned to the subject.");
+            return NotFound($"Course with ID {courseId} is not assigned to the subject.");
         }
-        subject.Courses.Remove(course);
+        subject.Courses.Remove(assignedCourse);
         await _context.SaveChangesAsync();
         return NoContent();
     }

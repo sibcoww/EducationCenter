@@ -75,5 +75,50 @@ namespace EducationCenter.Tests.Controllers
             Assert.IsType<NoContentResult>(result);
             Assert.Null(await db.Groups.FindAsync(group.Id));
         }
+
+        [Fact]
+        public async Task Create_ReturnsNotFound_WhenCourseDoesNotExist()
+        {
+            var db = GetDatabaseContext();
+            var controller = new GroupsController(db);
+
+            var result = await controller.Create(new CreateGroupDTo { Name = "Group A", CourseId = 999 });
+
+            Assert.IsType<NotFoundObjectResult>(result.Result);
+            Assert.Empty(db.Groups);
+        }
+
+        [Fact]
+        public async Task Update_ReturnsNotFound_WhenTeacherDoesNotExist()
+        {
+            var db = GetDatabaseContext();
+            var course = new Course { Title = "Course" };
+            var group = new Group { Name = "Group A", Course = course };
+            db.Groups.Add(group);
+            await db.SaveChangesAsync();
+            var controller = new GroupsController(db);
+            var dto = new UpdateGroupDTo { Name = "Group B", CourseId = course.Id, TeacherId = 999 };
+
+            var result = await controller.Update(group.Id, dto);
+
+            Assert.IsType<NotFoundObjectResult>(result.Result);
+            Assert.Null(group.TeacherId);
+        }
+
+        [Fact]
+        public async Task Delete_ReturnsConflict_WhenGroupContainsStudents()
+        {
+            var db = GetDatabaseContext();
+            var group = new Group { Name = "Group A" };
+            db.Groups.Add(group);
+            await db.SaveChangesAsync();
+            db.Students.Add(new Student { Name = "Alice", GroupId = group.Id });
+            await db.SaveChangesAsync();
+
+            var result = await new GroupsController(db).Delete(group.Id);
+
+            Assert.IsType<ConflictObjectResult>(result);
+            Assert.NotNull(await db.Groups.FindAsync(group.Id));
+        }
     }
 }

@@ -20,6 +20,11 @@ public class StudentsController : ControllerBase
     [HttpPost]
     public async Task<ActionResult<StudentDTo>> Create(CreateStudentDTo dto)
     {
+        if (dto.GroupId.HasValue && !await _context.Groups.AnyAsync(g => g.Id == dto.GroupId.Value))
+        {
+            return NotFound($"Group with ID {dto.GroupId.Value} not found.");
+        }
+
         var student = new Student
         {
             Name = dto.Name,
@@ -89,6 +94,11 @@ public class StudentsController : ControllerBase
     {
         var student = await _context.Students.FindAsync(id);
         if (student == null) return NotFound();
+
+        if (dto.GroupId.HasValue && !await _context.Groups.AnyAsync(g => g.Id == dto.GroupId.Value))
+        {
+            return NotFound($"Group with ID {dto.GroupId.Value} not found.");
+        }
 
         student.Name = dto.Name;
         student.BirthDate = dto.BirthDate;

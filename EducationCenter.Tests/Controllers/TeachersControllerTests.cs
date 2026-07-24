@@ -41,6 +41,7 @@ namespace EducationCenter.Tests.Controllers
 
             Assert.Equal(dto.Name, resultValue.Name);
             Assert.Equal(dto.BirthDate, resultValue.BirthDate);
+            Assert.True(resultValue.Id > 0);
         }
 
         [Fact]
@@ -76,15 +77,15 @@ namespace EducationCenter.Tests.Controllers
             dbContext.Subjects.Add(subject);
             await dbContext.SaveChangesAsync();
 
-            var controller = new TeachersController(dbContext);
+            var controller = new SubjectsController(dbContext);
 
             // Act
-            var actionResult = await controller.AddSubjectToTeacher(teacher.Id, subject.Id);
+            var actionResult = await controller.AddTeacherToSubject(subject.Id, teacher.Id);
 
             // Assert
             Assert.IsType<NoContentResult>(actionResult);
 
-            var dbTeacher = await dbContext.Teachers.Include(t => t.Subjects).FirstOrDefaultAsync(t => t.Id == teacher.Id);
+            var dbTeacher = await dbContext.Teachers.Include(t => t.Subjects).SingleAsync(t => t.Id == teacher.Id);
             Assert.Single(dbTeacher.Subjects);
             Assert.Equal(subject.Id, dbTeacher.Subjects.First().Id);
         }
@@ -99,13 +100,29 @@ namespace EducationCenter.Tests.Controllers
             dbContext.Teachers.Add(teacher);
             await dbContext.SaveChangesAsync();
 
-            var controller = new TeachersController(dbContext);
+            var controller = new SubjectsController(dbContext);
 
             // Act
-            var actionResult = await controller.AddSubjectToTeacher(teacher.Id, subject.Id);
+            var actionResult = await controller.AddTeacherToSubject(subject.Id, teacher.Id);
 
             // Assert
-            Assert.IsType<ConflictResult>(actionResult);
+            Assert.IsType<ConflictObjectResult>(actionResult);
+        }
+
+        [Fact]
+        public async Task Delete_ReturnsConflict_WhenTeacherIsAssignedToGroup()
+        {
+            var dbContext = GetDatabaseContext();
+            var teacher = new Teacher { Name = "John" };
+            dbContext.Teachers.Add(teacher);
+            await dbContext.SaveChangesAsync();
+            dbContext.Groups.Add(new Group { Name = "Group A", TeacherId = teacher.Id });
+            await dbContext.SaveChangesAsync();
+
+            var result = await new TeachersController(dbContext).Delete(teacher.Id);
+
+            Assert.IsType<ConflictObjectResult>(result);
+            Assert.NotNull(await dbContext.Teachers.FindAsync(teacher.Id));
         }
     }
 }

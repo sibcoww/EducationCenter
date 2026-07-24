@@ -30,6 +30,7 @@ public class TeachersController : ControllerBase
         await _context.SaveChangesAsync();
         var result = new TeacherDTo
         {
+            Id = teacher.Id,
             Name = teacher.Name,
             BirthDate = teacher.BirthDate,
             SubjectTitles = [],
@@ -81,7 +82,7 @@ public class TeachersController : ControllerBase
     }
 
     [HttpPut("{id}")]
-    public async Task<ActionResult<TeacherDTo>> Update(int id, CreateTeacherDTo dto)
+    public async Task<ActionResult<TeacherDTo>> Update(int id, UpdateTeacherDTo dto)
     {
         var teacher = await _context.Teachers.FindAsync(id);
         if (teacher == null)
@@ -112,48 +113,12 @@ public class TeachersController : ControllerBase
             return NotFound();
         }
 
-        _context.Teachers.Remove(teacher);
-        await _context.SaveChangesAsync();
-        
-        return NoContent();
-    }
-    
-    [HttpPost("{teacherId}/subjects/{subjectId}")]
-    public async Task<IActionResult> AddSubjectToTeacher(int teacherId, int subjectId)
-    {
-        var teacher = await _context.Teachers
-            .Include(t => t.Subjects)
-            .FirstOrDefaultAsync(t => t.Id == teacherId);
-            
-        if (teacher == null) return NotFound();
-        
-        var subject = await _context.Subjects.FindAsync(subjectId);
-        if (subject == null) return NotFound();
-        
-        if (teacher.Subjects.Any(s => s.Id == subjectId))
+        if (await _context.Groups.AnyAsync(g => g.TeacherId == id))
         {
-            return Conflict();
+            return Conflict($"Teacher with ID {id} is assigned to one or more groups.");
         }
-        
-        teacher.Subjects.Add(subject);
-        await _context.SaveChangesAsync();
-        
-        return NoContent();
-    }
-    
-    [HttpDelete("{teacherId}/subjects/{subjectId}")]
-    public async Task<IActionResult> RemoveSubjectFromTeacher(int teacherId, int subjectId)
-    {
-        var teacher = await _context.Teachers
-            .Include(t => t.Subjects)
-            .FirstOrDefaultAsync(t => t.Id == teacherId);
-            
-        if (teacher == null) return NotFound();
-        
-        var subject = teacher.Subjects.FirstOrDefault(s => s.Id == subjectId);
-        if (subject == null) return NotFound();
-        
-        teacher.Subjects.Remove(subject);
+
+        _context.Teachers.Remove(teacher);
         await _context.SaveChangesAsync();
         
         return NoContent();

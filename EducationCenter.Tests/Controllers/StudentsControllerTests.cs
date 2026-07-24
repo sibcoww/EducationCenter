@@ -68,5 +68,32 @@ namespace EducationCenter.Tests.Controllers
             Assert.IsType<NoContentResult>(result);
             Assert.Null(await db.Students.FindAsync(student.Id));
         }
+
+        [Fact]
+        public async Task Create_ReturnsNotFound_WhenGroupDoesNotExist()
+        {
+            var db = GetDatabaseContext();
+            var dto = new CreateStudentDTo { Name = "Alice", GroupId = 999 };
+
+            var result = await new StudentsController(db).Create(dto);
+
+            Assert.IsType<NotFoundObjectResult>(result.Result);
+            Assert.Empty(db.Students);
+        }
+
+        [Fact]
+        public async Task Update_ReturnsNotFound_WhenGroupDoesNotExist()
+        {
+            var db = GetDatabaseContext();
+            var student = new Student { Name = "Alice" };
+            db.Students.Add(student);
+            await db.SaveChangesAsync();
+            var dto = new UpdateStudentDTo { Name = "Alice", GroupId = 999 };
+
+            var result = await new StudentsController(db).Update(student.Id, dto);
+
+            Assert.IsType<NotFoundObjectResult>(result.Result);
+            Assert.Null(student.GroupId);
+        }
     }
 }

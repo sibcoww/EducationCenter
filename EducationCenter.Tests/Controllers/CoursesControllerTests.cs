@@ -62,5 +62,21 @@ namespace EducationCenter.Tests.Controllers
             var dbCourse = await dbContext.Courses.FindAsync(course.Id);
             Assert.Null(dbCourse);
         }
+
+        [Fact]
+        public async Task Delete_ReturnsConflict_WhenCourseHasGroups()
+        {
+            var dbContext = GetDatabaseContext();
+            var course = new Course { Title = "C#" };
+            dbContext.Courses.Add(course);
+            await dbContext.SaveChangesAsync();
+            dbContext.Groups.Add(new Group { Name = "Group A", CourseId = course.Id });
+            await dbContext.SaveChangesAsync();
+
+            var result = await new CoursesController(dbContext).Delete(course.Id);
+
+            Assert.IsType<ConflictObjectResult>(result);
+            Assert.NotNull(await dbContext.Courses.FindAsync(course.Id));
+        }
     }
 }
