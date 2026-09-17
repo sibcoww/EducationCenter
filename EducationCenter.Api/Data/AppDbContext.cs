@@ -14,5 +14,15 @@ namespace EducationCenter.Api.Data
         public DbSet<Student> Students { get; set; }
         public DbSet<Group> Groups { get; set; }
         public DbSet<Subject> Subjects { get; set; }
+
+        protected override void OnModelCreating(ModelBuilder modelBuilder)
+        {
+            base.OnModelCreating(modelBuilder);
+            modelBuilder.Entity<Group>()
+                .HasOne(g => g.Course)
+                .WithMany(c => c.Groups)
+                .HasForeignKey(g => g.CourseId)
+                .OnDelete(DeleteBehavior.Restrict);
+        }
     }
 }

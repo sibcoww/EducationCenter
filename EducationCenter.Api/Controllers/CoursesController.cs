@@ -3,6 +3,7 @@ using EducationCenter.Api.DTOs.Courses;
 using EducationCenter.Api.Models;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
+using Npgsql;
 
 namespace EducationCenter.Api.Controllers;
 
@@ -110,7 +111,19 @@ public class CoursesController : ControllerBase
         }
 
         _context.Courses.Remove(course);
-        await _context.SaveChangesAsync();
+        try
+        {
+            await _context.SaveChangesAsync();
+        }
+        catch (DbUpdateException exception) when (
+            exception.InnerException is PostgresException
+            {
+                SqlState: PostgresErrorCodes.ForeignKeyViolation,
+                ConstraintName: "FK_Groups_Courses_CourseId"
+            })
+        {
+            return Conflict($"Course with ID {id} is used by one or more groups.");
+        }
 
         return NoContent();
     }

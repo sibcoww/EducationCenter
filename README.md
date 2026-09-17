@@ -42,8 +42,14 @@ API позволяет работать со студентами, группа�
 подключения `DefaultConnection` в `EducationCenter.Api/appsettings.json`.
 
 ```bash
+dotnet ef database update --project EducationCenter.Api
 dotnet run --project EducationCenter.Api
 ```
+
+После получения новых миграций повторите `dotnet ef database update --project EducationCenter.Api`.
+Миграция `RestrictCourseDeletion` запрещает удаление курса с группами на уровне
+PostgreSQL. При конфликте удаления API возвращает `409 Conflict`, в том числе
+если группа появилась между предварительной проверкой и удалением курса.
 
 В режиме разработки Swagger UI доступен по адресу приложения, указанному в
 `EducationCenter.Api/Properties/launchSettings.json`.
