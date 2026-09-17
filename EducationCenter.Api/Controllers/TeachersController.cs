@@ -1,4 +1,4 @@
-﻿using EducationCenter.Api.Data;
+using EducationCenter.Api.Data;
 using EducationCenter.Api.DTOs.Subjects;
 using EducationCenter.Api.DTOs.Teachers;
 using EducationCenter.Api.Models;
@@ -95,13 +95,7 @@ public class TeachersController : ControllerBase
         
         await _context.SaveChangesAsync();
 
-        return Ok(new TeacherDTo
-        {
-            Id = teacher.Id,
-            Name = teacher.Name,
-            BirthDate = teacher.BirthDate,
-            // Subjects and Groups don't need to be updated in this endpoint
-        });
+        return await GetById(id);
     }
 
     [HttpDelete("{id}")]

@@ -1,4 +1,4 @@
-﻿using EducationCenter.Api.Data;
+using EducationCenter.Api.Data;
 using EducationCenter.Api.DTOs.Subjects;
 using EducationCenter.Api.Models;
 using Microsoft.AspNetCore.Mvc;
@@ -80,14 +80,10 @@ public class SubjectsController : ControllerBase
         subject.Title = dto.Title;
         subject.Description = dto.Description;
         await _context.SaveChangesAsync();
-        var result = new SubjectDTo
-        {
-            Id = subject.Id,
-            Title = subject.Title,
-            Description = subject.Description
-        };
-        return Ok(result);
+
+        return await GetById(id);
     }
+
     [HttpDelete("{id}")]
     public async Task<IActionResult> Delete(int id)
     {

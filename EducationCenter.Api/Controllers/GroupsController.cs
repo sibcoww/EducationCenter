@@ -145,23 +145,7 @@ public class GroupsController : ControllerBase
 
         await _context.SaveChangesAsync();
 
-        group = await _context.Groups
-            .Include(g => g.Course)
-            .Include(g => g.Subject)
-            .Include(g => g.Teacher)
-            .FirstAsync(g => g.Id == group.Id);
-
-        return Ok(new GroupDTo
-        {
-            Id = group.Id,
-            Name = group.Name,
-            CourseId = group.CourseId,
-            CourseTitle = group.Course?.Title ?? string.Empty,
-            SubjectId = group.SubjectId,
-            SubjectTitle = group.Subject?.Title,
-            TeacherId = group.TeacherId,
-            TeacherName = group.Teacher?.Name
-        });
+        return await GetById(id);
     }
 
     [HttpDelete("{id}")]

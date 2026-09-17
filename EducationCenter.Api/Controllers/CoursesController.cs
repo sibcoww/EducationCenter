@@ -95,13 +95,7 @@ public class CoursesController : ControllerBase
 
         await _context.SaveChangesAsync();
 
-        return Ok(new CourseDTo
-        {
-            Id = course.Id,
-            Title = course.Title,
-            Description = course.Description,
-            Price = course.Price
-        });
+        return await GetById(id);
     }
 
     [HttpDelete("{id}")]
